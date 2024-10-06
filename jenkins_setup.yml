@@ -1,6 +1,3 @@
----
-# jenkins_docker_setup.yml
-
 - name: Setup Jenkins as a Docker Container
   hosts: jenkins
   become: yes
@@ -31,6 +28,11 @@
       apt_key:
         url: https://download.docker.com/linux/ubuntu/gpg
         state: present
+    
+    - name: Add Docker repository
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
+        state: present
 
     - name: Install Docker Engine
       apt:
@@ -46,10 +48,6 @@
         name: "{{ ansible_user }}"
         groups: "{{ docker_group }}"
         append: yes
-    
-    - name: Add Jenkins user to Docker group
-      command: usermod -aG docker jenkins
-      become: yes
 
     - name: Start and enable Docker service
       systemd:
@@ -57,7 +55,7 @@
         state: started
         enabled: yes    
 
-    # 4. Create Jenkins Home Directory for Data Persistence
+    # Create Jenkins Home Directory for Data Persistence
     - name: Create Jenkins home directory
       file:
         path: "{{ jenkins_home }}"
@@ -66,14 +64,14 @@
         group: "{{ docker_group }}"
         mode: '0755'
 
-    # 5. Pull Jenkins Docker Image
+    # Pull Jenkins Docker Image
     - name: Pull Jenkins Docker image
       docker_image:
         name: "{{ jenkins_image }}"
         tag: latest
         source: pull
 
-    # 6. Run Jenkins Container
+    # Run Jenkins Container
     - name: Run Jenkins Docker container
       docker_container:
         name: "{{ jenkins_container_name }}"
