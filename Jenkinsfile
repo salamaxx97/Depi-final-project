@@ -5,8 +5,17 @@ pipeline {
     DOCKER_BFLASK_IMAGE = 'salamaxx97/my-flask-app:latest'
     DOCKER_REGISTRY_CREDS = 'Docker-hub'
   }
+   parameters {
+        string(name: 'BRANCH_NAME', defaultValue: 'salama-app', description: 'Branch to build')
+    }
+
 
   stages {
+   stage('Checkout') {
+            steps {
+                git branch: params.BRANCH_NAME, url: 'https://github.com/ahmedabdelharse/DEPI-Grad-Project.git'
+            }
+        }
     stage('Build') {
       steps {
         sh 'docker build -t my-flask-app .'
