@@ -11,11 +11,6 @@ pipeline {
 
 
   stages {
-   stage('Checkout') {
-            steps {
-                git branch: params.BRANCH_NAME, url: 'https://github.com/ahmedabdelharse/DEPI-Grad-Project.git'
-            }
-        }
     stage('Build') {
       steps {
         sh 'docker build -t my-flask-app .'
