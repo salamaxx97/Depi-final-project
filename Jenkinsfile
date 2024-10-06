@@ -5,10 +5,6 @@ pipeline {
     DOCKER_BFLASK_IMAGE = 'salamaxx97/my-flask-app:latest'
     DOCKER_REGISTRY_CREDS = 'Docker-hub'
   }
-   parameters {
-        string(name: 'BRANCH_NAME', defaultValue: 'salama-app', description: 'Branch to build')
-    }
-
 
   stages {
     stage('Build') {
