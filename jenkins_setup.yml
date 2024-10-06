@@ -1,0 +1,93 @@
+---
+# jenkins_docker_setup.yml
+
+- name: Setup Jenkins as a Docker Container
+  hosts: jenkins
+  become: yes
+  vars:
+    jenkins_home: /var/jenkins_home
+    jenkins_container_name: jenkins
+    jenkins_image: jenkins/jenkins:lts
+    docker_group: docker
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install prerequisite packages
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+        state: present
+        update_cache: yes
+
+    ## Add Docker’s official GPG key
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Install Docker Engine
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+        state: present
+        update_cache: yes
+
+    - name: Add user to docker group
+      user:
+        name: "{{ ansible_user }}"
+        groups: "{{ docker_group }}"
+        append: yes
+    
+    - name: Add Jenkins user to Docker group
+      command: usermod -aG docker jenkins
+      become: yes
+
+    - name: Start and enable Docker service
+      systemd:
+        name: docker
+        state: started
+        enabled: yes    
+
+    # 4. Create Jenkins Home Directory for Data Persistence
+    - name: Create Jenkins home directory
+      file:
+        path: "{{ jenkins_home }}"
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ docker_group }}"
+        mode: '0755'
+
+    # 5. Pull Jenkins Docker Image
+    - name: Pull Jenkins Docker image
+      docker_image:
+        name: "{{ jenkins_image }}"
+        tag: latest
+        source: pull
+
+    # 6. Run Jenkins Container
+    - name: Run Jenkins Docker container
+      docker_container:
+        name: "{{ jenkins_container_name }}"
+        image: "{{ jenkins_image }}"
+        state: started
+        restart_policy: unless-stopped
+        published_ports:
+          - "8080:8080"
+          - "50000:50000"
+        volumes:
+          - "{{ jenkins_home }}:/var/jenkins_home"
+          - /var/run/docker.sock:/var/run/docker.sock
+          - /usr/bin/docker:/usr/bin/docker
+
+        # env:
+        #   JAVA_OPTS: "-Djenkins.install.runSetupWizard=false"
+      
