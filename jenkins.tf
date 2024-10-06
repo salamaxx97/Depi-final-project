@@ -41,7 +41,7 @@ module "ssh_key" {
 resource "aws_instance" "jenkins_server" {
   ami             = var.ami_id           
   instance_type   = var.instance_type    
-  key_name        = var.key_name         
+  key_name        = module.ssh_key.key_name      
 
   security_groups = [aws_security_group.jenkins_sg.name]
 
